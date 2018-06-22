@@ -38,7 +38,7 @@ static class Store
     static IRouter BuildRoutes(IApplicationBuilder app) => new RouteBuilder(app)
         .MapPost("finddoc", FindDoc)
         .MapPut("doc", PutDoc)
-        .MapPost("hasblob", BlobExists)
+        .MapPost("hasblob", HasBlob)
         .MapPut("blob", PutBlob)
         .Build();
 
@@ -69,7 +69,7 @@ static class Store
         }
     }
 
-    static async Task BlobExists(HttpContext http)
+    static async Task HasBlob(HttpContext http)
     {
         var hashes = await http.ReadAs<string[]>();
         var exists = await Task.WhenAll(hashes.Select(hash => s_blob.GetBlobReference(hash).ExistsAsync()));
