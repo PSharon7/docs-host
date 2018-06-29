@@ -30,8 +30,8 @@ static class Host
         public string commit;
     }
 
-    private const string EndpointUrl = "https://docs-host.documents.azure.com:443/";
-    private const string PrimaryKey = "VmEAHupcmH3hc0VccBmR2jsh7viNtHBh6UX4OkoDtQ3sMX9HRvgD8tFXR1yObtyFHfFmh6c4fzBvuVXSh7Wrzw==";
+    private const string EndpointUrl = "";
+    private const string PrimaryKey = "";
     private const string defaultBranch = "master";
 
     private readonly static string DatabaseName = "docs-test";
