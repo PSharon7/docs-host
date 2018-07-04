@@ -22,10 +22,9 @@ using Newtonsoft.Json;
 
 static class Host
 {
-
     private readonly static string CollectionDocument = ConfigurationManager.AppSettings["collectionDoc"];
     private readonly static string CollectionBase = ConfigurationManager.AppSettings["collectionBase"];
-     
+
 
     static void Main(string[] args)
     {
@@ -63,7 +62,7 @@ static class Host
 
         await http.Write(documents);
     }
-    
+
 
     static async Task PutDoc(HttpContext http)
     {
@@ -103,11 +102,11 @@ static class Host
         stream.Position = 0;
         var hash = Hash(stream);
         stream.Position = 0;
-      
+
         await BlobStorage.cloudBlobContainer.GetBlockBlobReference(hash).UploadFromStreamAsync(stream);
         await http.Response.WriteAsync(hash);
     }
-    
+
 
     static async Task<T> ReadAs<T>(this HttpContext http) => JsonConvert.DeserializeObject<T>(await new StreamReader(http.Request.Body).ReadToEndAsync());
 
