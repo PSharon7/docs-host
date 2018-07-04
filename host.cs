@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using docs.host;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -20,22 +22,22 @@ using Newtonsoft.Json;
 
 static class Host
 {
-    class Document
+    private readonly static string CollectionDocument = ConfigurationManager.AppSettings["collectionDoc"];
+    private readonly static string CollectionBase = ConfigurationManager.AppSettings["collectionBase"];
+
+
+    static void Main(string[] args)
     {
-        public string url;
-        public string blob;
-        public string locale;
-        public string moniker;
-        public string commit;
-        public string docset;
+        DocumentDBRepo<BaseInfo>.Initialize(CollectionBase);
+        DocumentDBRepo<docs.host.Document>.Initialize(CollectionDocument);
+        BlobStorage.Initialize();
+
+        WebHost.CreateDefaultBuilder(args)
+            .ConfigureServices(services => services.AddRouting())
+            .Configure(Configure)
+            .Build()
+            .Run();
     }
-
-    static readonly DocumentClient s_db = new DocumentClient(new Uri(""), "");
-    static readonly CloudBlobContainer s_blob = CloudStorageAccount.Parse("").CreateCloudBlobClient().GetRootContainerReference();
-
-    static readonly Task<string> s_spFindDocs = CreateStoredProcedure("finddocs", "SELECT * FROM docs");
-
-    static void Main(string[] args) => WebHost.CreateDefaultBuilder(args).Configure(Configure).Build().Run();
 
     static void Configure(IApplicationBuilder app) => app.UseRouter(BuildRoutes(app));
 
@@ -49,34 +51,62 @@ static class Host
     static async Task FindDoc(HttpContext http)
     {
         var filter = await http.ReadAs<Dictionary<string, string>>();
-        var spFindDocs = await s_spFindDocs;
-        var result = await s_db.ExecuteStoredProcedureAsync(spFindDocs, (dynamic)null);
-        await http.Write((Document[])result.Response);
+        var baseinfos = await DocumentDBRepo<BaseInfo>.GetItemsAsync(b => b.basename == "/azure" && b.branch == "master");
+        List<string> commits = new List<string>();
+        foreach (BaseInfo b in baseinfos)
+        {
+            commits.Add(b.commit);
+        }
+
+        var documents = await DocumentDBRepo<docs.host.Document>.GetItemsAsync(d => commits.Contains(d.commit));
+
+        await http.Write(documents);
     }
+
 
     static async Task PutDoc(HttpContext http)
     {
-        var docs = await http.ReadAs<Document[]>();
-        await Task.WhenAll(docs.Select(doc => s_db.UpsertDocumentAsync("", doc, disableAutomaticIdGeneration: true)));
-    }
+        var docs = await http.ReadAs<docs.host.Document[]>();
+        docs.host.Document d1 = new docs.host.Document();
+        d1.url = "/azure/new1";
+        d1.blob = "Empty";
+        d1.locale = "zh-cn";
+        d1.version = "1";
+        d1.commit = "123";
 
-    static async Task PutBlob(HttpContext http)
-    {
-        var stream = new MemoryStream();
-        await http.Request.Body.CopyToAsync(stream);
-        stream.Position = 0;
-        var hash = Hash(stream);
-        stream.Position = 0;
-        await s_blob.GetBlockBlobReference(hash).UploadFromStreamAsync(stream);
-        await http.Response.WriteAsync(hash);
+        docs.host.Document d2 = new docs.host.Document();
+        d2.url = "/azure/new2";
+        d2.blob = "Empty";
+        d2.locale = "zh-cn";
+        d2.version = "2";
+        d2.commit = "124";
+
+        var temp = new docs.host.Document[] { d1, d2 };
+
+        await Task.WhenAll(temp.Select(doc => DocumentDBRepo<docs.host.Document>.UpsertItemsAsync(doc)));
     }
 
     static async Task HasBlob(HttpContext http)
     {
         var hashes = await http.ReadAs<string[]>();
-        var exists = await Task.WhenAll(hashes.Select(hash => s_blob.GetBlobReference(hash).ExistsAsync()));
+        hashes = new string[] { "DEa-2nAqlzieDscFGMTEky-6TUU" };
+        var exists = await Task.WhenAll(hashes.Select(hash => BlobStorage.cloudBlobContainer.GetBlobReference(hash).ExistsAsync()));
         await http.Write(exists);
     }
+
+    static async Task PutBlob(HttpContext http)
+    {
+        byte[] byteArray = Encoding.Default.GetBytes("Emtpy");
+        var stream = new MemoryStream(byteArray);
+        await http.Request.Body.CopyToAsync(stream);
+        stream.Position = 0;
+        var hash = Hash(stream);
+        stream.Position = 0;
+
+        await BlobStorage.cloudBlobContainer.GetBlockBlobReference(hash).UploadFromStreamAsync(stream);
+        await http.Response.WriteAsync(hash);
+    }
+
 
     static async Task<T> ReadAs<T>(this HttpContext http) => JsonConvert.DeserializeObject<T>(await new StreamReader(http.Request.Body).ReadToEndAsync());
 
@@ -98,10 +128,4 @@ static class Host
         }
     }
 
-    static async Task<string> CreateStoredProcedure(string name, string code)
-    {
-        var link = $"{name}-{Hash(code)}";
-        await s_db.CreateStoredProcedureAsync(link, new StoredProcedure { Body = code });
-        return link;
-    }
 }
