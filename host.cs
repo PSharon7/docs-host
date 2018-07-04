@@ -25,15 +25,13 @@ static class Host
 
     private readonly static string CollectionDocument = ConfigurationManager.AppSettings["collectionDoc"];
     private readonly static string CollectionBase = ConfigurationManager.AppSettings["collectionBase"];
-    
-
-    //static readonly CloudBlobContainer s_blob = CloudStorageAccount.Parse("").CreateCloudBlobClient().GetRootContainerReference();
-    
+     
 
     static void Main(string[] args)
     {
         DocumentDBRepo<BaseInfo>.Initialize(CollectionBase);
         DocumentDBRepo<docs.host.Document>.Initialize(CollectionDocument);
+        BlobStorage.Initialize();
 
         WebHost.CreateDefaultBuilder(args)
             .ConfigureServices(services => services.AddRouting())
@@ -47,8 +45,8 @@ static class Host
     static IRouter BuildRoutes(IApplicationBuilder app) => new RouteBuilder(app)
         .MapPost("finddoc", FindDoc)
         .MapPut("doc", PutDoc)
-        //.MapPost("hasblob", HasBlob)
-        //.MapPut("blob", PutBlob)
+        .MapPost("hasblob", HasBlob)
+        .MapPut("blob", PutBlob)
         .Build();
 
     static async Task FindDoc(HttpContext http)
@@ -89,25 +87,27 @@ static class Host
         await Task.WhenAll(temp.Select(doc => DocumentDBRepo<docs.host.Document>.UpsertItemsAsync(doc)));
     }
 
-    /*
     static async Task HasBlob(HttpContext http)
     {
         var hashes = await http.ReadAs<string[]>();
-        var exists = await Task.WhenAll(hashes.Select(hash => s_blob.GetBlobReference(hash).ExistsAsync()));
+        hashes = new string[] { "DEa-2nAqlzieDscFGMTEky-6TUU" };
+        var exists = await Task.WhenAll(hashes.Select(hash => BlobStorage.cloudBlobContainer.GetBlobReference(hash).ExistsAsync()));
         await http.Write(exists);
     }
 
     static async Task PutBlob(HttpContext http)
     {
-        var stream = new MemoryStream();
+        byte[] byteArray = Encoding.Default.GetBytes("Emtpy");
+        var stream = new MemoryStream(byteArray);
         await http.Request.Body.CopyToAsync(stream);
         stream.Position = 0;
         var hash = Hash(stream);
         stream.Position = 0;
-        await s_blob.GetBlockBlobReference(hash).UploadFromStreamAsync(stream);
+      
+        await BlobStorage.cloudBlobContainer.GetBlockBlobReference(hash).UploadFromStreamAsync(stream);
         await http.Response.WriteAsync(hash);
     }
-    */
+    
 
     static async Task<T> ReadAs<T>(this HttpContext http) => JsonConvert.DeserializeObject<T>(await new StreamReader(http.Request.Body).ReadToEndAsync());
 
@@ -129,12 +129,4 @@ static class Host
         }
     }
 
-    /*
-    static async Task<string> CreateStoredProcedure(string name, string code)
-    {
-        var link = $"{name}-{Hash(code)}";
-        await s_db.CreateStoredProcedureAsync(link, new StoredProcedure { Body = code });
-        return link;
-    }
-    */
 }
