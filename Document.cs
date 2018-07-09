@@ -5,17 +5,20 @@ using System.Threading.Tasks;
 
 namespace docs.host
 {
+    [Serializable]
     public class Document
     {
-        public string url
+        public string Url
         { get; set; }
-        public string blob
+        public string Blob
         { get; set; }
-        public string locale
+        public string Locale
         { get; set; }
-        public string version
+        public string Version
         { get; set; }
-        public string commit
+        public string Commit
+        { get; set; }
+        public string Id
         { get; set; }
     }
 }
