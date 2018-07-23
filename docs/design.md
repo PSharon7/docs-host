@@ -21,7 +21,7 @@ This is the design spec for cosmos db DHS
 | version       |                                                  |                                   |
 | docset name   |                                                  |                                   |
 | page_hash     | The output hash of page content/metadata         |                                   |
-| page_id       | The id of page table                             |                                   |
+| page_url      | The page url or resource url                     |                                   |
 
 ## Page Table
 
