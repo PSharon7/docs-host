@@ -45,4 +45,4 @@ This is the design spec for cosmos db DHS
   - Get documents from document table (version branch + locale + url)
   - Locale fallback and branch fallback
   - Priority
-  - Return 1 document with page_url(cosmos url with `page_id`) or 404
+  - Return 1 document with page_url(cosmos url with `page_url`) or 404
