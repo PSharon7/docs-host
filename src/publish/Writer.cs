@@ -14,7 +14,10 @@ namespace docs.host
 
         public static Task UploadDocuments(List<Document> documents, Action<int, int> progress)
         {
-            throw new NotImplementedException();
+            return ParallelUtility.ParallelForEach(documents, document =>
+            {
+                return CosmosDBAccessor<Document>.UpsertAsync(document);
+            }, 1000, 200, progress);
         }
     }
 }

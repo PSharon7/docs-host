@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Hosting;
 
 namespace docs.host
 {
-    static class Host
+    public static class Host
     {
-        static void Main(string[] args)
+        public static void Create()
         {
             BlobAccessor.Initialize();
-            WebHost.CreateDefaultBuilder(args)
+            WebHost.CreateDefaultBuilder()
                 .Build()
                 .Run();
         }

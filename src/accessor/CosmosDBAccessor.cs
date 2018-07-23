@@ -17,7 +17,7 @@ namespace docs.host
         private static readonly string s_databaseId = ConfigurationManager.AppSettings["cosmos_database"];
         private static readonly Uri endpointUri = new Uri(ConfigurationManager.AppSettings["cosmos_endpoint"]);
         private static readonly DocumentClient client = new DocumentClient(endpointUri, ConfigurationManager.AppSettings["cosmos_authKey"]);
-        private static readonly ConcurrentDictionary<Type, Task<Uri>> documentCollectionUris;
+        private static readonly ConcurrentDictionary<Type, Task<Uri>> documentCollectionUris = new ConcurrentDictionary<Type, Task<Uri>>();
 
         public static async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate)
         {
@@ -36,11 +36,12 @@ namespace docs.host
             return results;
         }
 
-        public static async Task UpdateAsync(T item)
+        public static async Task UpsertAsync(T item, int retryCount = 10)
         {
             var collectionUri = await GetCollection();
             var queryDone = false;
-            while (!queryDone)
+            var retry = 0;
+            while (!queryDone && retry++ < retryCount)
             {
                 try
                 {
