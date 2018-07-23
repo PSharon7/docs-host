@@ -3,10 +3,11 @@
 This is the design spec for cosmos db dhs
 
 ## Summary
-- Use URL as the partition key
+- Use URL as the partition key of below `document` table
 - Locale fallback and branch fallback are supported in DHS service
 - No bloom filter anymore, one query fron rendering will always get 1 document or 404
 - Git version controlling doesn't seem to work, the output are not only related to the git version, also including configuration version, pipeline behavior version
+- Split page metadata and page content to another table `page` and use hash to hash for referencing. 
 
 ## Document table
 
