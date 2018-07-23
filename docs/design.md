@@ -1,4 +1,7 @@
 # Docs Hosting Design Spec
+
+This is the design spec for cosmos db dhs
+
 ## Document table
 
 | field name    | description                                      | note                              |
@@ -16,7 +19,7 @@
 
 | field name  | description                                         | note                              |
 |-------------|-----------------------------------------------------|-----------------------------------|
-| url         |                                                     |                                   |
+| url         | host name + base path + relative path               | partition key                     |
 | locale      |                                                     |                                   |
 | branch      |                                                     |                                   |
 | commit      |                                                     |                                   |
