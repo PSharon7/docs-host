@@ -20,6 +20,7 @@ This is the design spec for cosmos db DHS
 | branch        |                                                  |                                   |
 | version       |                                                  |                                   |
 | docset name   |                                                  |                                   |
+| etag          |                                                  |                                   |
 | page_hash     | The output hash of page content/metadata         |                                   |
 | page_url      | The page url or resource url                     |                                   |
 
@@ -32,6 +33,16 @@ This is the design spec for cosmos db DHS
 | page_metadata |                                                     |                                   |
 | page_content  |                                                     |                                   |
 
+
+## Active Table
+
+| field name    | description                                         | note                              |
+|---------------|-----------------------------------------------------|-----------------------------------|
+| docset        |                                                     |                                   |
+| locale        |                                                     |                                   |
+| branch        |                                                     |                                   |
+| etag          |                                                     |                                   |
+| is_active     |                                                     |                                   |
 
 ## Workflow
 
