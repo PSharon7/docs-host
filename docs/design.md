@@ -37,7 +37,8 @@ This is the design spec for cosmos db DHS
 
 - Publish
   - Upload missing page content/metadata -> auto generated -> `page_id`
-  - Upload all documents with `page_hash` + `page_id`
+  - Upload all documents with `page_hash` + `page_id` and latest commit flag
+  - Switch latest commit flag
   - DHS clean un-used documents and corresponding pages
   
 - Query
