@@ -20,8 +20,8 @@ This is the design spec for cosmos db DHS
 | branch        |                                                  |                                   |
 | version       |                                                  |                                   |
 | docset name   |                                                  |                                   |
-| page_hash     |                                                  |                                   |
-| page_id       |                                                  |                                   |
+| page_hash     | The output hash of page content/metadata         |                                   |
+| page_id       | The id of page table                             |                                   |
 
 ## Page Table
 
@@ -36,11 +36,10 @@ This is the design spec for cosmos db DHS
 ## Workflow
 
 - Publish
-  - List all documents based on `document table` (docset_name + branch + locale)
   - Upload missing page content/metadata -> auto generated -> `page_id`
-  - Insert missing document with `page_hash` + `page_id`
-  - Delete un-used document (DHS will auto clean corresponding page table)
-
+  - Upload all documents with `page_hash` + `page_id`
+  - DHS clean un-used documents and corresponding pages
+  
 - Query
   - Get documents from document table (version branch + locale + url)
   - Locale fallback and branch fallback
