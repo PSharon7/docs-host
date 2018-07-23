@@ -31,7 +31,7 @@ namespace docs.host
 
             if (args.Length == 0)
             {
-                // Show usage when just running `docfx`
+                // Show usage when just running `docs-host`
                 args = new[] { "--help" };
             }
 
