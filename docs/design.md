@@ -2,6 +2,12 @@
 
 This is the design spec for cosmos db dhs
 
+## Summary
+- Use URL as the partition key
+- Locale fallback and branch fallback are supported in DHS service
+- No bloom filter anymore, one query fron rendering will always get 1 document or 404
+- Git version controlling doesn't seem to work, the output are not only related to the git version, also including configuration version, pipeline behavior version
+
 ## Document table
 
 | field name    | description                                      | note                              |
@@ -11,47 +17,31 @@ This is the design spec for cosmos db dhs
 | relative path |                                                  |                                   |
 | locale        |                                                  |                                   |
 | branch        |                                                  |                                   |
-| commit        |                                                  |                                   |
 | version       |                                                  |                                   |
 | docset name   |                                                  |                                   |
+| latest_hash   |                                                  |                                   |
+| page_id       |                                                  |                                   |
 
-## Commit Table
+## Page Table
 
-| field name  | description                                         | note                              |
-|-------------|-----------------------------------------------------|-----------------------------------|
-| url         | host name + base path + relative path               | partition key                     |
-| locale      |                                                     |                                   |
-| branch      |                                                     |                                   |
-| commit      |                                                     |                                   |
-| docset name |                                                     |                                   |
+| field name    | description                                         | note                              |
+|---------------|-----------------------------------------------------|-----------------------------------|
+|      id       | The auto generated id                               |                                   |
+| latest_hash   | The output content hash                             |                                   |
+| page_metadata |                                                     |                                   |
+| page_content  |                                                     |                                   |
+
 
 ## Workflow
 
-### Publish
-- New document:
-  - Query Url + locale + commit1  
-  - Not Found  
-  - Insert Document table(commit1) and commit table  
-  - Commit table:  
-  - Url + locale + branch1 + commit1  
-- Update document:
-  - Query Url + locale + commit2
-  - Not Found
-  - Insert document table(commit2) and inset commit table
-  - Commit table:
-    - Url + locale + branch1 + commit2
-    - Url + locale + branch1 + commit1
-- Fork branch2:
-  - Query url + locale + commit2
-  - Found
-  - Insert commit table
-  - Commit table:
-     - Url + locale + branch1 + commit2
-  	- Url + locale + branch1 + commit1
-  	- Url + locale + branch2 + commit2
+- Publish
+  - List all documents based on `document table` (docset_name + branch + locale)
+  - Upload missing page content/metadata -> page_id
+  - Insert missing document (url + last_hash + page_id)
+  - Delete un-used document(DHS will auto clean corresponding page table)
 
-### Query(URL + branch1 + locale)
-- Query commit table
-- Found commit2 + commit 1
-- Query doucment table Url  + commit2
-- Found 1 document
+- Query
+  - Get document from document table (version branch + locale + url)
+  - Locale fallback and branch fallback
+  - Priority
+  - Return 1 document with page_id or 404
