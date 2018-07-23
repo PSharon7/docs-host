@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Configuration;
+using System.Threading;
 
 namespace docs.host
 {
@@ -18,13 +19,20 @@ namespace docs.host
         private readonly static string DatabaseId = ConfigurationManager.AppSettings["database"];
 
         public static DocumentClient client;
+        public static Uri endpointUri;
+        public static Uri documentCollectionUri;
 
         private static string CollectionId = "";
 
         public static void Initialize(string Id)
         {
             CollectionId = Id;
-            client = new DocumentClient(new Uri(EndpointUrl), PrimaryKey);
+            
+            endpointUri = new Uri(EndpointUrl);
+            documentCollectionUri = UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId);
+
+            client = new DocumentClient(endpointUri, PrimaryKey);
+
             CreateDatabaseIfNotExistsAsync().Wait();
             CreateCollectionIfNotExistsAsync().Wait();
         }
@@ -52,7 +60,7 @@ namespace docs.host
         {
             try
             {
-                await client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId));
+                await client.ReadDocumentCollectionAsync(documentCollectionUri);
             }
             catch (DocumentClientException e)
             {
@@ -74,7 +82,7 @@ namespace docs.host
         public static async Task<IEnumerable<T>> GetItemsAsync(Expression<Func<T, bool>> predicate)
         {
             IDocumentQuery<T> query = client.CreateDocumentQuery<T>(
-                UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId))
+                documentCollectionUri)
                 .Where(predicate)
                 .AsDocumentQuery();
 
@@ -87,9 +95,37 @@ namespace docs.host
             return results;
         }
 
-        public static async Task<Microsoft.Azure.Documents.Document> UpsertItemsAsync(T item)
+        public static async Task UpsertItemsAsync(T item)
         {
-            return await client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), item);
+            var queryDone = false;
+            while (!queryDone)
+            {
+                try
+                {
+                    await client.UpsertDocumentAsync(documentCollectionUri, item);
+                    queryDone = true;
+                }
+                catch (DocumentClientException documentClientException)
+                {
+                    var statusCode = (int)documentClientException.StatusCode;
+                    if (statusCode == 429 || statusCode == 503)
+                        Thread.Sleep(documentClientException.RetryAfter);
+                    else
+                        throw;
+                }
+                catch (AggregateException aggregateException)
+                {
+                    if (aggregateException.InnerException.GetType() == typeof(DocumentClientException))
+                    {
+                        var docExcep = aggregateException.InnerException as DocumentClientException;
+                        var statusCode = (int)docExcep.StatusCode;
+                        if (statusCode == 429 || statusCode == 503)
+                            Thread.Sleep(docExcep.RetryAfter);
+                        else
+                            throw;
+                    }
+                }
+            }
         }
     }
 }
