@@ -9,25 +9,25 @@
 ### Publish
 - New document:
   - Query Url + locale + commit1  
-	- Not Found  
-	- Insert Document table(commit1) and commit table  
-	- Commit table:  
-	  - Url + locale + branch1 + commit1  
+  - Not Found  
+  - Insert Document table(commit1) and commit table  
+  - Commit table:  
+  - Url + locale + branch1 + commit1  
 - Update document:
-	- Query Url + locale + commit2
-	- Not Found
-	- Insert document table(commit2) and inset commit table
-	- Commit table:
-	  - Url + locale + branch1 + commit2
+  - Query Url + locale + commit2
+  - Not Found
+  - Insert document table(commit2) and inset commit table
+  - Commit table:
+    - Url + locale + branch1 + commit2
     - Url + locale + branch1 + commit1
 - Fork branch2:
-	- Query url + locale + commit2
-	- Found
-	- Insert commit table
-	- Commit table:
-    - Url + locale + branch1 + commit2
-		- Url + locale + branch1 + commit1
-		- Url + locale + branch2 + commit2
+  - Query url + locale + commit2
+  - Found
+  - Insert commit table
+  - Commit table:
+     - Url + locale + branch1 + commit2
+  	- Url + locale + branch1 + commit1
+  	- Url + locale + branch2 + commit2
 
 ### Query(URL + branch1 + locale)
 - Query commit table
