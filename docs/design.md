@@ -1,27 +1,26 @@
 # Docs Hosting Design Spec
 ## Document table
-- Partition Key: url(host + base path + relative path)
 
-| field name | description | note |
-|------------|-------------|------|
-| url  |             |      |
-| base path  |             |      |
-| relative path |          |      |
-| locale     |             |      |
-| branch     |             |      |
-| commit     |             |      |
-| version    |             |      |
-| docset name |            |      |
+| field name    | description                                      | note                              |
+|---------------|--------------------------------------------------|-----------------------------------|
+| url           | host name + base path + relative path            | partition key                     |
+| base path     |                                                  |                                   |
+| relative path |                                                  |                                   |
+| locale        |                                                  |                                   |
+| branch        |                                                  |                                   |
+| commit        |                                                  |                                   |
+| version       |                                                  |                                   |
+| docset name   |                                                  |                                   |
 
 ## Commit Table
 
-| field name | description | note |
-|------------|-------------|------|
-| url        |             |      |
-| locale     |             |      |
-| branch     |             |      |
-| commit     |             |      |
-| docset name |            |      |
+| field name  | description                                         | note                              |
+|-------------|-----------------------------------------------------|-----------------------------------|
+| url         |                                                     |                                   |
+| locale      |                                                     |                                   |
+| branch      |                                                     |                                   |
+| commit      |                                                     |                                   |
+| docset name |                                                     |                                   |
 
 ## Workflow
 
