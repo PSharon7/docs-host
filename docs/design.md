@@ -1,11 +1,11 @@
 # Docs Hosting Design Spec
 
-This is the design spec for cosmos db dhs
+This is the design spec for cosmos db DHS
 
 ## Summary
 - Use URL as the partition key of below `document` table
 - Locale fallback and branch fallback are supported in DHS service
-- No bloom filter anymore, one query fron rendering will always get 1 document or 404
+- No bloom filter anymore, one query from rendering will always get 1 document or 404
 - Git version controlling doesn't seem to work, the output are not only related to the git version, also including configuration version, pipeline behavior version
 - Split page metadata and page content to another table `page` and use hash to hash for referencing. 
 
@@ -20,15 +20,15 @@ This is the design spec for cosmos db dhs
 | branch        |                                                  |                                   |
 | version       |                                                  |                                   |
 | docset name   |                                                  |                                   |
-| latest_hash   |                                                  |                                   |
+| page_hash     |                                                  |                                   |
 | page_id       |                                                  |                                   |
 
 ## Page Table
 
 | field name    | description                                         | note                              |
 |---------------|-----------------------------------------------------|-----------------------------------|
-|      id       | The auto generated id                               |                                   |
-| latest_hash   | The output content hash                             |                                   |
+| id            | The auto generated id                               |                                   |
+| hash          | The output content hash                             |                                   |
 | page_metadata |                                                     |                                   |
 | page_content  |                                                     |                                   |
 
@@ -37,12 +37,12 @@ This is the design spec for cosmos db dhs
 
 - Publish
   - List all documents based on `document table` (docset_name + branch + locale)
-  - Upload missing page content/metadata -> page_id
-  - Insert missing document (url + last_hash + page_id)
-  - Delete un-used document(DHS will auto clean corresponding page table)
+  - Upload missing page content/metadata -> auto generated -> `page_id`
+  - Insert missing document with `page_hash` + `page_id`
+  - Delete un-used document (DHS will auto clean corresponding page table)
 
 - Query
-  - Get document from document table (version branch + locale + url)
+  - Get documents from document table (version branch + locale + url)
   - Locale fallback and branch fallback
   - Priority
-  - Return 1 document with page_id or 404
+  - Return 1 document with page_url(cosmos url with `page_id`) or 404
