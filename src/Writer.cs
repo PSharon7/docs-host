@@ -12,7 +12,7 @@ namespace docs.host
             throw new NotImplementedException();
         }
 
-        public static Task UploadDocuments(List<Document> documents)
+        public static Task UploadDocuments(List<Document> documents, Action<int, int> progress)
         {
             throw new NotImplementedException();
         }
