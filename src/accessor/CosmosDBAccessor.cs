@@ -14,9 +14,9 @@ namespace docs.host
 {
     public static class CosmosDBAccessor<T> where T : class
     {
-        private static readonly string s_databaseId = ConfigurationManager.AppSettings["cosmos_database"];
-        private static readonly Uri endpointUri = new Uri(ConfigurationManager.AppSettings["cosmos_endpoint"]);
-        private static readonly DocumentClient client = new DocumentClient(endpointUri, ConfigurationManager.AppSettings["cosmos_authkey"]);
+        private static readonly string s_databaseId = Config.Get("cosmos_database");
+        private static readonly Uri endpointUri = new Uri(Config.Get("cosmos_endpoint"));
+        private static readonly DocumentClient client = new DocumentClient(endpointUri, Config.Get("cosmos_authkey"));
         private static readonly ConcurrentDictionary<Type, Task<Uri>> documentCollectionUris = new ConcurrentDictionary<Type, Task<Uri>>();
         
         public static async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate)

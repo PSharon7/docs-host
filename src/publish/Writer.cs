@@ -43,7 +43,7 @@ namespace docs.host
                     await CosmosDBAccessor<Page>.UpsertAsync(page);
                 }
 
-                pageUrl = "https://" + ConfigurationManager.AppSettings["cosmos_domain"] +
+                pageUrl = "https://" + Config.Get("cosmos_domain") +
                     "/dbs/" + CosmosDBAccessor<Page>.GetDatabaseId() +
                     "/colls/" + CosmosDBAccessor<Page>.GetCollectionId() +
                     "/docs/" + hash;

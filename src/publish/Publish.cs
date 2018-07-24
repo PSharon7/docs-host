@@ -16,11 +16,11 @@ namespace docs.host
     {
 
         private static readonly DocumentHostingServiceClient s_dhsClient =
-            new DocumentHostingServiceClient(new Uri(ConfigurationManager.AppSettings["dhs_baseuri"]), ConfigurationManager.AppSettings["dhs_clientname"], ConfigurationManager.AppSettings["dhs_apiaccesskey"]);
+            new DocumentHostingServiceClient(new Uri(Config.Get("dhs_baseuri")), Config.Get("dhs_clientname"), Config.Get("dhs_apiaccesskey"));
 
         public static async Task Migrate(string basePath, string branch, string locale, int top = 3)
         {
-            var depots = await s_dhsClient.GetAllDepotsBySiteBasePath("docs.microsoft.com", basePath, null, CancellationToken.None);
+            var depots = await s_dhsClient.GetAllDepotsBySiteBasePath("docs", basePath, null, CancellationToken.None);
             var topDepots = depots.OrderBy(d => d.Priority).Take(top);
             var client = new HttpClient();
             var activeEtag = DateTime.UtcNow.ToString("o");

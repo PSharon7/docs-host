@@ -6,8 +6,8 @@ namespace docs.host
 {
     public static class BlobAccessor
     {
-        private readonly static string s_storageConnectionString = ConfigurationManager.AppSettings["blob_connection"];
-        private readonly static string s_containerName = ConfigurationManager.AppSettings["blob_container"];
+        private readonly static string s_storageConnectionString = Config.Get("blob_connection");
+        private readonly static string s_containerName = Config.Get("blob_container");
 
         public static CloudStorageAccount storageAccount;
         public static CloudBlobContainer cloudBlobContainer;
