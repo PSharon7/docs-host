@@ -20,7 +20,7 @@ namespace docs.host
 
         public static async Task Migrate(string basePath, string branch, string locale, int top = 3)
         {
-            var depots = await s_dhsClient.GetAllDepotsBySiteBasePath("docs", basePath, null, CancellationToken.None);
+            var depots = await s_dhsClient.GetAllDepotsBySiteBasePath("Docs", basePath, null, CancellationToken.None);
             var topDepots = depots.OrderBy(d => d.Priority).Take(top);
             var client = new HttpClient();
             var activeEtag = DateTime.UtcNow.ToString("o");
@@ -38,7 +38,7 @@ namespace docs.host
                         var pageDoc = new Document
                         {
                             Docset = topDepot.DepotName,
-                            Url = $"docs.microsoft.com/{basePath}/{document.AssetId}",
+                            Url = $"{basePath}/{document.AssetId}",
                             Locale = locale,
                             Branch = branch,
                             Monikers = (document.CombinedMetadata["monikers"] as JArray)?.ToObject<List<string>>(),
