@@ -12,8 +12,8 @@ namespace docs.host
         public static async Task<(string pageUrl, string pageHash)> UploadPage(Stream pageStream, string contentType)
         {
             string pageUrl;
-            string hash = HashUtility.GetSha1HashString(pageStream);            
-            
+            string hash = HashUtility.GetSha1HashString(pageStream);
+
             /* img or pdf*/
             if (contentType == "image/jpeg" || contentType == "image/png" || contentType == "application/pdf")
             {
@@ -54,7 +54,7 @@ namespace docs.host
 
             pageStream.Close();
             return (pageUrl, hash);
-            
+
         }
 
         public static async Task UploadDocuments(List<Document> documents, string activeEtag, Action<int, int> progress)
@@ -68,7 +68,7 @@ namespace docs.host
             await ParallelUtility.ParallelForEach(documents, document =>
             {
                 return CosmosDBAccessor<Document>.UpsertAsync(document);
-            }, 1000, 200, progress);
+            }, 2000, 1000, progress);
 
             // switch active etag
             var doc = documents.First();
