@@ -130,5 +130,11 @@ namespace docs.host
             result.Monikers = new List<string> { finalMoniker };
             return result;
         }
+
+        public static async Task<string> GetPageContent(string uri)
+        {
+            var page = await CosmosDBAccessor<Page>.GetByUriAsync(uri);
+            return page?.Content;
+        }
     }
 }

@@ -32,6 +32,20 @@ namespace docs.host
             }
         }
 
+        public static async Task<T> GetByUriAsync(string docUri)
+        {
+            try
+            {
+                Uri uri = new Uri(docUri, UriKind.Absolute);
+                return (await s_client.ReadDocumentAsync<T>(uri.AbsolutePath)).Document;
+            }
+            catch (DocumentClientException e)
+            {
+                if (e.StatusCode == HttpStatusCode.NotFound) return default(T);
+                throw;
+            }
+        }
+
         public static Uri GetDocumentUri(string id)
         {
             var collectionId = GetCollectionId();

@@ -15,7 +15,7 @@ namespace docs.host
         private static readonly char[] PathSeparators = new[] { '/' };
 
         [HttpGet("{*path}")]
-        public async Task<ActionResult<Document>> GetAsync(string path, [FromQuery]string branch, [FromQuery]string view)
+        public async Task<ActionResult> GetAsync(string path, [FromQuery]string branch, [FromQuery]string view)
         {
             var pathAndLocale = ResolvePathAndLocale(path);
 
@@ -45,7 +45,7 @@ namespace docs.host
                 return RedirectPermanent($"/{path}{updatedQuery.ToString()}");
             }
 
-            return Ok(doc);
+            return Ok(doc.IsDynamicRendering ? (object)await Reader.GetPageContent(doc.PageUrl) : doc);
         }
 
         private Tuple<string, string> ResolvePathAndLocale(string path)
@@ -55,7 +55,7 @@ namespace docs.host
             finalPath = (finalPath ?? "/index").ToLowerInvariant();
             finalPath = LocaleHelper.GetPathWithoutLocale(finalPath, out string locale);
             finalPath = finalPath.StartsWith("/") ? finalPath : "/" + finalPath;
-            finalPath = finalPath.EndsWith("/") ? finalPath + "index" : finalPath;W
+            finalPath = finalPath.EndsWith("/") ? finalPath + "index" : finalPath;
             return Tuple.Create(finalPath, locale);
         }
     }

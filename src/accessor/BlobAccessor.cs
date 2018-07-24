@@ -1,5 +1,6 @@
-﻿using System.Configuration;
+﻿using System;
 using System.Threading.Tasks;
+
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 
@@ -24,6 +25,20 @@ namespace docs.host
         public static string GetContainerName()
         {
             return s_containerName;
+        }
+
+        public static string GetBlobUriWithSasToken(string blobUri)
+        {
+            string sharedAccessSignature = storageAccount.GetSharedAccessSignature(
+                new SharedAccessAccountPolicy
+                {
+                    Permissions = SharedAccessAccountPermissions.Read,
+                    SharedAccessExpiryTime = DateTime.UtcNow.AddHours(1),
+                    SharedAccessStartTime = DateTime.UtcNow.AddMinutes(-10)
+                });
+
+            blobUri += sharedAccessSignature;
+            return blobUri;
         }
     }
 }
