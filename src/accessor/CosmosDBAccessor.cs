@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
@@ -17,6 +18,25 @@ namespace docs.host
         private static readonly Uri s_endpointUri = new Uri(Config.Get("cosmos_endpoint"));
         private static readonly DocumentClient s_client = new DocumentClient(s_endpointUri, Config.Get("cosmos_authkey"));
         private static readonly ConcurrentDictionary<Type, Task<Uri>> s_documentCollectionUris = new ConcurrentDictionary<Type, Task<Uri>>();
+
+        public static async Task<T> GetAsync(string id)
+        {
+            try
+            {
+                return (await s_client.ReadDocumentAsync<T>(GetDocumentUri(id))).Document;
+            }
+            catch (DocumentClientException e)
+            {
+                if (e.StatusCode == HttpStatusCode.NotFound) return default(T);
+                throw;
+            }
+        }
+
+        public static Uri GetDocumentUri(string id)
+        {
+            var collectionId = GetCollectionId();
+            return UriFactory.CreateDocumentUri(s_databaseId, collectionId, id);
+        }
         
         public static async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate)
         {

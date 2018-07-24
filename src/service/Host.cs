@@ -9,6 +9,7 @@ namespace docs.host
         {
             BlobAccessor.Initialize();
             WebHost.CreateDefaultBuilder()
+                .UseStartup<Startup>()
                 .Build()
                 .Run();
         }

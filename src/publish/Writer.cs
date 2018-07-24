@@ -29,11 +29,11 @@ namespace docs.host
             }
             else
             {
-                ICollection<Page> pageExist = (ICollection<Page>)CosmosDBAccessor<Page>.QueryAsync(p => p.Hash == hash);
+                Page page = await CosmosDBAccessor<Page>.GetAsync(hash);
 
-                if (pageExist.Count == 0)
+                if (page is null)
                 {
-                    Page page = new Page()
+                    page = new Page()
                     {
                         Id = hash,
                         Hash = hash,
@@ -43,16 +43,11 @@ namespace docs.host
                     await CosmosDBAccessor<Page>.UpsertAsync(page);
                 }
 
-                pageUrl = "https://" + Config.Get("cosmos_domain") +
-                    "/dbs/" + CosmosDBAccessor<Page>.GetDatabaseId() +
-                    "/colls/" + CosmosDBAccessor<Page>.GetCollectionId() +
-                    "/docs/" + hash;
-
+                pageUrl = CosmosDBAccessor<Page>.GetDocumentUri(hash).ToString();
             }
 
             pageStream.Close();
             return (pageUrl, hash);
-
         }
 
         public static async Task UploadDocuments(List<Document> documents, string activeEtag, Action<int, int> progress)
