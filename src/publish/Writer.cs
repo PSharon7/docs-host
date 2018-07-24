@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace docs.host
@@ -12,12 +14,32 @@ namespace docs.host
             throw new NotImplementedException();
         }
 
-        public static Task UploadDocuments(List<Document> documents, Action<int, int> progress)
+        public static async Task UploadDocuments(List<Document> documents, string activeEtag, Action<int, int> progress)
         {
-            return ParallelUtility.ParallelForEach(documents, document =>
+            if (documents == null || !documents.Any())
+            {
+                return;
+            }
+
+            // upload documents
+            await ParallelUtility.ParallelForEach(documents, document =>
             {
                 return CosmosDBAccessor<Document>.UpsertAsync(document);
             }, 1000, 200, progress);
+
+            // switch active etag
+            var doc = documents.First();
+            var active = new Active
+            {
+                ActiveEtag = activeEtag,
+                IsActive = false,
+                Branch = doc.Branch,
+                Locale = doc.Locale,
+                Docset = doc.Docset,
+                Id = HashUtility.GetSha1HashString($"{doc.Docset}|{doc.Branch}|{doc.Locale}")
+            };
+
+            await CosmosDBAccessor<Active>.UpsertAsync(active);
         }
     }
 }
