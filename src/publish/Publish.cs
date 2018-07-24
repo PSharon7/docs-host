@@ -41,7 +41,7 @@ namespace docs.host
                             Url = $"docs.microsoft.com/{basePath}/{document.AssetId}",
                             Locale = locale,
                             Branch = branch,
-                            Monikers = (document.CombinedMetadata["monikers"] as JArray).ToObject<List<string>>(),
+                            Monikers = (document.CombinedMetadata["monikers"] as JArray)?.ToObject<List<string>>(),
                             ActiveEtag = activeEtag,
                             PageHash = pageHash,
                             PageUrl = pageUrl,
