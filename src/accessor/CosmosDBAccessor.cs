@@ -9,6 +9,7 @@ using System.Linq;
 using System.Configuration;
 using System.Threading;
 using System.Collections.Concurrent;
+using Newtonsoft.Json;
 
 namespace docs.host
 {
@@ -18,6 +19,15 @@ namespace docs.host
         private static readonly Uri endpointUri = new Uri(ConfigurationManager.AppSettings["cosmos_endpoint"]);
         private static readonly DocumentClient client = new DocumentClient(endpointUri, ConfigurationManager.AppSettings["cosmos_authkey"]);
         private static readonly ConcurrentDictionary<Type, Task<Uri>> documentCollectionUris = new ConcurrentDictionary<Type, Task<Uri>>();
+
+        public static async Task<T> GetAsync(string id)
+        {
+            var collectionId = GetCollectionId();
+            var docUri = UriFactory.CreateDocumentUri(s_databaseId, collectionId, id);
+            var document = await client.ReadDocumentAsync(docUri);
+
+            return JsonConvert.DeserializeObject<T>(document.ToString());
+        }
         
         public static async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate)
         {

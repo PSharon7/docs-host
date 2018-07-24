@@ -29,11 +29,11 @@ namespace docs.host
             }
             else
             {
-                ICollection<Page> pageExist = (ICollection<Page>)CosmosDBAccessor<Page>.QueryAsync(p => p.Hash == hash);
+                Page page = await CosmosDBAccessor<Page>.GetAsync(hash);
 
-                if (pageExist.Count == 0)
+                if (page is null)
                 {
-                    Page page = new Page()
+                    page = new Page()
                     {
                         Id = hash,
                         Hash = hash,
@@ -52,7 +52,6 @@ namespace docs.host
 
             pageStream.Close();
             return (pageUrl, hash);
-
         }
 
         public static async Task UploadDocuments(List<Document> documents, string activeEtag, Action<int, int> progress)
