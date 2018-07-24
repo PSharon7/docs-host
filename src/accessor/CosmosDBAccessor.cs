@@ -10,6 +10,7 @@ using System.Configuration;
 using System.Threading;
 using System.Collections.Concurrent;
 using Newtonsoft.Json;
+using System.Net;
 
 namespace docs.host
 {
@@ -22,10 +23,15 @@ namespace docs.host
 
         public static async Task<T> GetAsync(string id)
         {
-            var docUri = GetDocumentUri(id);
-            var document = await client.ReadDocumentAsync(docUri);
-
-            return JsonConvert.DeserializeObject<T>(document.ToString());
+            try
+            {
+                return (await client.ReadDocumentAsync<T>(GetDocumentUri(id))).Document;
+            }
+            catch (DocumentClientException e)
+            {
+                if (e.StatusCode == HttpStatusCode.NotFound) return default(T);
+                throw;
+            }
         }
 
         public static Uri GetDocumentUri(string id)
