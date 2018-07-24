@@ -13,22 +13,24 @@ namespace docs.host
         {
             string pageUrl;
             string hash = HashUtility.GetSha1HashString(pageStream);
-            
+            pageStream.Position = 0;
+
             if (isDynamicRender)
             {
                 Page page = await CosmosDBAccessor<Page>.GetAsync(hash);
 
                 if (page is null)
                 {
-                    StreamReader sr = new StreamReader(pageStream);
-                    page = new Page()
+                    using (var sr = new StreamReader(pageStream))
                     {
-                        id = hash,
-                        Hash = hash,
-                        Content = sr.ReadToEnd(),
-                    };
 
-                    sr.Close();
+                        page = new Page()
+                        {
+                            id = hash,
+                            Hash = hash,
+                            Content = sr.ReadToEnd(),
+                        };
+                    }
                     await CosmosDBAccessor<Page>.UpsertAsync(page);
                 }
 
@@ -48,7 +50,6 @@ namespace docs.host
                 pageUrl = blob.Uri.AbsoluteUri;
             }
 
-            pageStream.Close();
             return (pageUrl, hash);
         }
 

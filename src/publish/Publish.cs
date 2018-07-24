@@ -24,7 +24,6 @@ namespace docs.host
             Console.WriteLine($"Get depots for {basePath}");
             var depots = await s_dhsClient.GetAllDepotsBySiteBasePath("Docs", basePath, null, CancellationToken.None);
             var topDepots = depots.OrderBy(d => d.Priority).Take(top);
-            var client = new HttpClient();
             var activeEtag = Guid.NewGuid().ToString();
 
             await ParallelUtility.ParallelForEach(topDepots, async topDepot =>
@@ -44,8 +43,7 @@ namespace docs.host
                 var pageDocs = new ConcurrentBag<Document>();
                 await ParallelUtility.ParallelForEach(documents, async document =>
                 {
-                    using (var request = new HttpRequestMessage(HttpMethod.Get, document.ContentUri))
-                    using (Stream contentStream = await (await client.SendAsync(request)).Content.ReadAsStreamAsync())
+                    using (Stream contentStream = await HttpHelper.DownloadAsStream(document.ContentUri, CancellationToken.None))
                     {
                         var (pageUrl, pageHash) = await Writer.UploadPage(contentStream, document.CombinedMetadata.GetValueOrDefault<bool>("is_dynamic_rendering"), document.CombinedMetadata.GetValueOrDefault<string>("content_type"));
                         var pageDoc = new Document
