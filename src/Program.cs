@@ -8,6 +8,7 @@ namespace docs.host
     {
         public static async Task<int> Main(string[] args)
         {
+            await BlobAccessor.Initialize();
             var (command, basePath, branch, locale) = ParseCommandLineOptions(args);
             switch (command)
             {
@@ -15,7 +16,7 @@ namespace docs.host
                     Host.Create();
                     break;
                 case "migrate":
-                    await Publish.Migrate(basePath, branch, locale);
+                    await Publish.Migrate(basePath, branch, locale, 1);
                     break;
             }
 

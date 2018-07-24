@@ -2,7 +2,7 @@
 {
     public class Active
     {
-        public string Id { get; set; }
+        public string id { get; set; }
         public string Docset { get; set; }
         public string Locale { get; set; }
         public string Branch { get; set; }

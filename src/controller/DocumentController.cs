@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -56,8 +55,7 @@ namespace docs.host
             finalPath = (finalPath ?? "/index").ToLowerInvariant();
             finalPath = LocaleHelper.GetPathWithoutLocale(finalPath, out string locale);
             finalPath = finalPath.StartsWith("/") ? finalPath : "/" + finalPath;
-            finalPath = finalPath.EndsWith("/") ? finalPath + "index" : finalPath;
-
+            finalPath = finalPath.EndsWith("/") ? finalPath + "index" : finalPath;W
             return Tuple.Create(finalPath, locale);
         }
     }
