@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Document.Hosting;
 using Microsoft.Document.Hosting.RestClient;
 using Newtonsoft.Json.Linq;
 
@@ -30,29 +31,29 @@ namespace docs.host
                 Console.WriteLine($"Load documents for {topDepot.DepotName}");
                 var documents = await s_dhsClient.GetAllDocuments(topDepot.DepotName, locale, branch, false, null, CancellationToken.None);
 
-                Console.WriteLine($"Convert documents for {topDepot.DepotName}");
+                Console.WriteLine($"Convert {documents.Count} documents for {topDepot.DepotName}");
                 var pageDocs = new ConcurrentBag<Document>();
                 await ParallelUtility.ParallelForEach(documents, async document =>
                 {
                     using (var request = new HttpRequestMessage(HttpMethod.Get, document.ContentUri))
                     using (Stream contentStream = await (await client.SendAsync(request)).Content.ReadAsStreamAsync())
                     {
-                        var (pageUrl, pageHash) = await Writer.UploadPage(contentStream, document.CombinedMetadata["content_type"].ToString());
+                        var (pageUrl, pageHash) = await Writer.UploadPage(contentStream, document.CombinedMetadata.GetValueOrDefault<string>("content_type"));
                         var pageDoc = new Document
                         {
                             Docset = topDepot.DepotName,
                             Url = $"{basePath}{document.AssetId}",
                             Locale = locale,
                             Branch = branch,
-                            Monikers = document.CombinedMetadata.TryGetValue("monikers", out var monikers) ? (monikers as JArray)?.ToObject<List<string>>() : null,
+                            Monikers = document.CombinedMetadata.GetValueOrDefault<JArray>("monikers")?.ToObject<List<string>>(),
                             ActiveEtag = activeEtag,
                             PageHash = pageHash,
                             PageUrl = pageUrl,
-                            PageType = document.CombinedMetadata["page_type"].ToString(),
-                            Title = document.CombinedMetadata["title"].ToString(),
-                            Layout = document.CombinedMetadata["layout"].ToString(),
-                            IsDynamicRendering = (bool)document.CombinedMetadata["is_dynamic_rendering"],
-                            ContentType = document.CombinedMetadata["content_type"].ToString()
+                            PageType = document.CombinedMetadata.GetValueOrDefault<string>("page_type"),
+                            Title = document.CombinedMetadata.GetValueOrDefault<string>("title"),
+                            Layout = document.CombinedMetadata.GetValueOrDefault<string>("layout"),
+                            IsDynamicRendering = document.CombinedMetadata.GetValueOrDefault<bool>("is_dynamic_rendering"),
+                            ContentType = document.CombinedMetadata.GetValueOrDefault<string>("content_type")
                         };
                         pageDocs.Add(pageDoc);
                     }
