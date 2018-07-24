@@ -12,15 +12,15 @@ namespace docs.host
         public static async Task<(string pageUrl, string pageHash)> UploadPage(Stream pageStream, string contentType)
         {
             string pageUrl;
-            string hash = HashUtility.GetSha1HashString(pageStream);            
-            
+            string hash = HashUtility.GetSha1HashString(pageStream);
+
             /* img or pdf*/
             if (contentType == "png" || contentType == "jpg" || contentType == "pdf")
             {
                 bool blobExist = await BlobAccessor.cloudBlobContainer.GetBlockBlobReference(hash).ExistsAsync();
 
                 if (!blobExist)
-                { 
+                {
                     await BlobAccessor.cloudBlobContainer.GetBlockBlobReference(hash).UploadFromStreamAsync(pageStream);
                 }
 
@@ -46,7 +46,7 @@ namespace docs.host
 
             pageStream.Close();
             return (pageUrl, hash);
-            
+
         }
 
         public static async Task UploadDocuments(List<Document> documents, string activeEtag, Action<int, int> progress)
