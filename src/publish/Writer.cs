@@ -13,9 +13,28 @@ namespace docs.host
         {
             string pageUrl;
             string hash = HashUtility.GetSha1HashString(pageStream);
+            
+            if (contentType == "application/json" || contentType == "text/html" || contentType == "text/plain")
+            {
+                Page page = await CosmosDBAccessor<Page>.GetAsync(hash);
 
-            /* img or pdf*/
-            if (contentType == "image/jpeg" || contentType == "image/png" || contentType == "application/pdf")
+                if (page is null)
+                {
+                    StreamReader sr = new StreamReader(pageStream);
+                    page = new Page()
+                    {
+                        id = hash,
+                        Hash = hash,
+                        Content = sr.ReadToEnd(),
+                    };
+
+                    sr.Close();
+                    await CosmosDBAccessor<Page>.UpsertAsync(page);
+                }
+
+                pageUrl = Config.Get("cosmos_endpoint") + CosmosDBAccessor<Page>.GetDocumentUri(hash).ToString();
+            }
+            else
             {
                 var blob = BlobAccessor.cloudBlobContainer.GetBlockBlobReference(hash);
                 bool blobExist = await blob.ExistsAsync();
@@ -26,28 +45,6 @@ namespace docs.host
                 }
 
                 pageUrl = blob.Uri.AbsoluteUri;
-            }
-            else
-            {
-                Page page = await CosmosDBAccessor<Page>.GetAsync(hash);
-
-                if (page is null)
-                {
-                    StreamReader sr = new StreamReader(pageStream);
-                    
-
-                    page = new Page()
-                    {
-                        Id = hash,
-                        Hash = hash,
-                        Content = sr.ReadToEnd(),
-                    };
-
-                    sr.Close();
-                    await CosmosDBAccessor<Page>.UpsertAsync(page);
-                }
-
-                pageUrl = Config.Get("cosmos_endpoint") + CosmosDBAccessor<Page>.GetDocumentUri(hash).ToString();
             }
 
             pageStream.Close();
@@ -76,7 +73,7 @@ namespace docs.host
                 Branch = doc.Branch,
                 Locale = doc.Locale,
                 Docset = doc.Docset,
-                Id = HashUtility.GetSha1HashString($"{doc.Docset}|{doc.Branch}|{doc.Locale}")
+                id = HashUtility.GetSha1HashString($"{doc.Docset}|{doc.Branch}|{doc.Locale}")
             };
 
             await CosmosDBAccessor<Active>.UpsertAsync(active);
