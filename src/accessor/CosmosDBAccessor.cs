@@ -1,28 +1,27 @@
-﻿using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
-using Microsoft.Azure.Documents.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
-using System;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Configuration;
+using System.Linq.Expressions;
 using System.Threading;
-using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Documents.Linq;
 
 namespace docs.host
 {
     public static class CosmosDBAccessor<T> where T : class
     {
         private static readonly string s_databaseId = Config.Get("cosmos_database");
-        private static readonly Uri endpointUri = new Uri(Config.Get("cosmos_endpoint"));
-        private static readonly DocumentClient client = new DocumentClient(endpointUri, Config.Get("cosmos_authkey"));
-        private static readonly ConcurrentDictionary<Type, Task<Uri>> documentCollectionUris = new ConcurrentDictionary<Type, Task<Uri>>();
+        private static readonly Uri s_endpointUri = new Uri(Config.Get("cosmos_endpoint"));
+        private static readonly DocumentClient s_client = new DocumentClient(s_endpointUri, Config.Get("cosmos_authkey"));
+        private static readonly ConcurrentDictionary<Type, Task<Uri>> s_documentCollectionUris = new ConcurrentDictionary<Type, Task<Uri>>();
         
         public static async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate)
         {
             var collectionUri = await GetCollection();
-            IDocumentQuery<T> query = client.CreateDocumentQuery<T>(
+            IDocumentQuery<T> query = s_client.CreateDocumentQuery<T>(
                 collectionUri)
                 .Where(predicate)
                 .AsDocumentQuery();
@@ -45,7 +44,7 @@ namespace docs.host
             {
                 try
                 {
-                    await client.UpsertDocumentAsync(collectionUri, item);
+                    await s_client.UpsertDocumentAsync(collectionUri, item);
                     queryDone = true;
                 }
                 catch (DocumentClientException documentClientException)
@@ -81,7 +80,7 @@ namespace docs.host
             return GetFriendlyName(typeof(T));
         }
 
-        private static Task<Uri> GetCollection() => documentCollectionUris.GetOrAdd(typeof(T), async key =>
+        private static Task<Uri> GetCollection() => s_documentCollectionUris.GetOrAdd(typeof(T), async key =>
         {
             var collectionId = GetFriendlyName(typeof(T));
             var collectionUri = UriFactory.CreateDocumentCollectionUri(s_databaseId, collectionId);
@@ -96,13 +95,13 @@ namespace docs.host
         {
             try
             {
-                await client.ReadDatabaseAsync(UriFactory.CreateDatabaseUri(databaseId));
+                await s_client.ReadDatabaseAsync(UriFactory.CreateDatabaseUri(databaseId));
             }
             catch (DocumentClientException e)
             {
                 if (e.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    await client.CreateDatabaseAsync(new Database { Id = databaseId });
+                    await s_client.CreateDatabaseAsync(new Database { Id = databaseId });
                 }
                 else
                 {
@@ -115,13 +114,13 @@ namespace docs.host
         {
             try
             {
-                await client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(s_databaseId, collectionId));
+                await s_client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(s_databaseId, collectionId));
             }
             catch (DocumentClientException e)
             {
                 if (e.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    await client.CreateDocumentCollectionAsync(
+                    await s_client.CreateDocumentCollectionAsync(
                         UriFactory.CreateDatabaseUri(databaseId),
                         new DocumentCollection { Id = collectionId },
                         new RequestOptions { OfferThroughput = 1000 });

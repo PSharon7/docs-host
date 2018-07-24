@@ -20,6 +20,7 @@ namespace docs.host
 
         public static async Task Migrate(string basePath, string branch, string locale, int top = 3)
         {
+            Console.WriteLine($"Get depots for {basePath}");
             var depots = await s_dhsClient.GetAllDepotsBySiteBasePath("Docs", basePath, null, CancellationToken.None);
             var topDepots = depots.OrderBy(d => d.Priority).Take(top);
             var client = new HttpClient();
@@ -27,8 +28,11 @@ namespace docs.host
 
             await ParallelUtility.ParallelForEach(topDepots, async topDepot =>
             {
-                var documents = await s_dhsClient.GetAllDocuments(topDepot.DepotName, branch, locale, false, null, CancellationToken.None);
-                await ParallelUtility.ParallelForEach(documents, async document =>
+                Console.WriteLine($"Load documents for {topDepot.DepotName}");
+                var documents = await s_dhsClient.GetAllDocuments(topDepot.DepotName, locale, branch, false, null, CancellationToken.None);
+
+                Console.WriteLine($"Convert documents for {topDepot.DepotName}");
+                await ParallelUtility.ParallelForEach(documents.Take(1), async document =>
                 {
                     var pageDocs = new ConcurrentBag<Document>();
                     using (var request = new HttpRequestMessage(HttpMethod.Get, document.ContentUri))

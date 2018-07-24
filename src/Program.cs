@@ -15,7 +15,7 @@ namespace docs.host
                     Host.Create();
                     break;
                 case "migrate":
-                    await Publish.Migrate(basePath, branch, locale);
+                    await Publish.Migrate(basePath, branch, locale, 1);
                     break;
             }
 
