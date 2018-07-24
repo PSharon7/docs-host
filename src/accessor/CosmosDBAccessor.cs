@@ -76,7 +76,7 @@ namespace docs.host
             return s_databaseId;
         }
 
-        public static string GetCollectionId(Type T)
+        public static string GetCollectionId()
         {
             return GetFriendlyName(typeof(T));
         }

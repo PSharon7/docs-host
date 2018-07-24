@@ -26,13 +26,11 @@ namespace docs.host
                 }
 
                 pageUrl = blob.Uri.AbsoluteUri;
-
-
             }
             else
             {
                 ICollection<Page> pageExist = (ICollection<Page>)CosmosDBAccessor<Page>.QueryAsync(p => p.Hash == hash);
-                
+
                 if (pageExist.Count == 0)
                 {
                     Page page = new Page()
@@ -45,9 +43,9 @@ namespace docs.host
                     await CosmosDBAccessor<Page>.UpsertAsync(page);
                 }
 
-                pageUrl = "https://" + ConfigurationManager.AppSettings["cosmos_domain"] + 
-                    "/dbs/" + CosmosDBAccessor<Page>.GetDatabaseId() + 
-                    "/colls/" + CosmosDBAccessor<Page>.GetCollectionId(typeof(Page)) +
+                pageUrl = "https://" + ConfigurationManager.AppSettings["cosmos_domain"] +
+                    "/dbs/" + CosmosDBAccessor<Page>.GetDatabaseId() +
+                    "/colls/" + CosmosDBAccessor<Page>.GetCollectionId() +
                     "/docs/" + hash;
 
             }
