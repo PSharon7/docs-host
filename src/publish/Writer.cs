@@ -35,7 +35,7 @@ namespace docs.host
                 {
                     page = new Page()
                     {
-                        Id = hash,
+                        id = hash,
                         Hash = hash,
                         Content = pageStream.ToString()
                     };
@@ -72,7 +72,7 @@ namespace docs.host
                 Branch = doc.Branch,
                 Locale = doc.Locale,
                 Docset = doc.Docset,
-                Id = HashUtility.GetSha1HashString($"{doc.Docset}|{doc.Branch}|{doc.Locale}")
+                id = HashUtility.GetSha1HashString($"{doc.Docset}|{doc.Branch}|{doc.Locale}")
             };
 
             await CosmosDBAccessor<Active>.UpsertAsync(active);

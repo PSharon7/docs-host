@@ -14,7 +14,6 @@ namespace docs.host
 {
     public static class Publish
     {
-
         private static readonly DocumentHostingServiceClient s_dhsClient =
             new DocumentHostingServiceClient(new Uri(Config.Get("dhs_baseuri")), Config.Get("dhs_clientname"), Config.Get("dhs_apiaccesskey"));
 
@@ -32,9 +31,9 @@ namespace docs.host
                 var documents = await s_dhsClient.GetAllDocuments(topDepot.DepotName, locale, branch, false, null, CancellationToken.None);
 
                 Console.WriteLine($"Convert documents for {topDepot.DepotName}");
-                await ParallelUtility.ParallelForEach(documents.Take(1), async document =>
+                var pageDocs = new ConcurrentBag<Document>();
+                await ParallelUtility.ParallelForEach(documents, async document =>
                 {
-                    var pageDocs = new ConcurrentBag<Document>();
                     using (var request = new HttpRequestMessage(HttpMethod.Get, document.ContentUri))
                     using (Stream contentStream = await (await client.SendAsync(request)).Content.ReadAsStreamAsync())
                     {
@@ -42,10 +41,10 @@ namespace docs.host
                         var pageDoc = new Document
                         {
                             Docset = topDepot.DepotName,
-                            Url = $"{basePath}/{document.AssetId}",
+                            Url = $"{basePath}{document.AssetId}",
                             Locale = locale,
                             Branch = branch,
-                            Monikers = (document.CombinedMetadata["monikers"] as JArray)?.ToObject<List<string>>(),
+                            Monikers = document.CombinedMetadata.TryGetValue("monikers", out var monikers) ? (monikers as JArray)?.ToObject<List<string>>() : null,
                             ActiveEtag = activeEtag,
                             PageHash = pageHash,
                             PageUrl = pageUrl,
@@ -57,13 +56,20 @@ namespace docs.host
                         };
                         pageDocs.Add(pageDoc);
                     }
+                },
+                2000,
+                1000,
+                (done, total) =>
+                {
+                    var percent = ((int)(100 * Math.Min(1.0, done / Math.Max(1.0, total)))).ToString();
+                    Console.WriteLine($"Uploading Page Content for {topDepot.DepotName}: {percent.PadLeft(3)}% {done}/{total}");
+                });
 
-                    await Writer.UploadDocuments(pageDocs.ToList(), activeEtag, (done, total) =>
-                    {
-                        var percent = ((int)(100 * Math.Min(1.0, done / Math.Max(1.0, total)))).ToString();
-                        Console.WriteLine($"{topDepot.DepotName}: {percent.PadLeft(3)}% {done}/{total}");
-                    });
-                }, 2000, 1000);
+                await Writer.UploadDocuments(pageDocs.ToList(), activeEtag, (done, total) =>
+                {
+                    var percent = ((int)(100 * Math.Min(1.0, done / Math.Max(1.0, total)))).ToString();
+                    Console.WriteLine($"Uploading Page Document for {topDepot.DepotName}: {percent.PadLeft(3)}% {done}/{total}");
+                });
             }, 10, 5);
         }
     }
