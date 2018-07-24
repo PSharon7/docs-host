@@ -18,7 +18,7 @@ namespace docs.host
         private static readonly Uri endpointUri = new Uri(ConfigurationManager.AppSettings["cosmos_endpoint"]);
         private static readonly DocumentClient client = new DocumentClient(endpointUri, ConfigurationManager.AppSettings["cosmos_authKey"]);
         private static readonly ConcurrentDictionary<Type, Task<Uri>> documentCollectionUris = new ConcurrentDictionary<Type, Task<Uri>>();
-
+        
         public static async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate)
         {
             var collectionUri = await GetCollection();
@@ -69,6 +69,16 @@ namespace docs.host
                     }
                 }
             }
+        }
+
+        public static string GetDatabaseId()
+        {
+            return s_databaseId;
+        }
+
+        public static string GetCollectionId(Type T)
+        {
+            return GetFriendlyName(typeof(T));
         }
 
         private static Task<Uri> GetCollection() => documentCollectionUris.GetOrAdd(typeof(T), async key =>

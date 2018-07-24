@@ -15,24 +15,29 @@ namespace docs.host
             string hash = HashUtility.GetSha1HashString(pageStream);            
             
             /* img or pdf*/
-            if (contentType == "png" || contentType == "jpg" || contentType == "pdf")
+            if (contentType == "image/jpeg" || contentType == "image/png" || contentType == "application/pdf")
             {
-                bool blobExist = await BlobAccessor.cloudBlobContainer.GetBlockBlobReference(hash).ExistsAsync();
+                var blob = BlobAccessor.cloudBlobContainer.GetBlockBlobReference(hash);
+                bool blobExist = await blob.ExistsAsync();
 
                 if (!blobExist)
-                { 
-                    await BlobAccessor.cloudBlobContainer.GetBlockBlobReference(hash).UploadFromStreamAsync(pageStream);
+                {
+                    await blob.UploadFromStreamAsync(pageStream);
                 }
 
-                pageUrl = ConfigurationManager.AppSettings["schema"] + ConfigurationManager.AppSettings["blob_domain"] + ConfigurationManager.AppSettings["blob_endpoint"] + hash;
+                pageUrl = blob.Uri.AbsoluteUri;
+
+
             }
             else
             {
                 ICollection<Page> pageExist = (ICollection<Page>)CosmosDBAccessor<Page>.QueryAsync(p => p.Hash == hash);
+                
                 if (pageExist.Count == 0)
                 {
                     Page page = new Page()
                     {
+                        Id = hash,
                         Hash = hash,
                         Content = pageStream.ToString()
                     };
@@ -40,7 +45,10 @@ namespace docs.host
                     await CosmosDBAccessor<Page>.UpsertAsync(page);
                 }
 
-                pageUrl = ConfigurationManager.AppSettings["schema"] + ConfigurationManager.AppSettings["cosmos_domain"] + ConfigurationManager.AppSettings["cosmos_endpoint"] + hash;
+                pageUrl = "https://" + ConfigurationManager.AppSettings["cosmos_domain"] + 
+                    "/dbs/" + CosmosDBAccessor<Page>.GetDatabaseId() + 
+                    "/colls/" + CosmosDBAccessor<Page>.GetCollectionId(typeof(Page)) +
+                    "/docs/" + hash;
 
             }
 

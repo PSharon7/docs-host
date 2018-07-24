@@ -18,5 +18,10 @@ namespace docs.host
             CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
             cloudBlobContainer = blobClient.GetContainerReference(s_containerName);
         }
+
+        public static string GetContainerName()
+        {
+            return s_containerName;
+        }
     }
 }
