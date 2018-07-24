@@ -22,11 +22,16 @@ namespace docs.host
 
         public static async Task<T> GetAsync(string id)
         {
-            var collectionId = GetCollectionId();
-            var docUri = UriFactory.CreateDocumentUri(s_databaseId, collectionId, id);
+            var docUri = GetDocumentUri(id);
             var document = await client.ReadDocumentAsync(docUri);
 
             return JsonConvert.DeserializeObject<T>(document.ToString());
+        }
+
+        public static Uri GetDocumentUri(string id)
+        {
+            var collectionId = GetCollectionId();
+            return UriFactory.CreateDocumentUri(s_databaseId, collectionId, id);
         }
         
         public static async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate)
