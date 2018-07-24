@@ -6,7 +6,7 @@
     <ApplicationIcon />
     <OutputType>Exe</OutputType>
     <StartupObject />
-    <UserSecretsId>ef6cd596-33b0-4730-98f1-5e4a94f3b10e</UserSecretsId>
+    <UserSecretsId>docs-host</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
