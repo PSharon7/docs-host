@@ -10,7 +10,7 @@ namespace docs.host
         [HttpGet("{url}/{branch}/{locale}/{version}")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
-        public async Task<ActionResult<Document>> Get(string url, string branch, string locale, string version)
+        public async Task<ActionResult<Document>> GetAsync(string url, string branch, string locale, string version)
         {
             var document = await Reader.QueryDocument(url, branch, locale, version);
             if (document is null)
