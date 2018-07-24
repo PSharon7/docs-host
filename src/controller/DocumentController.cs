@@ -1,22 +1,31 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
 using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Mvc;
 
 namespace docs.host
 {
-    [Route("api/Documents")]
     [ApiController]
     public class DocumentController : ControllerBase
     {
-        [HttpGet("{url}/{branch}/{locale}/{version}")]
+        private const string Host = "docs.microsoft.com/";
+
+        [HttpGet("{*path}")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
-        public async Task<ActionResult<Document>> GetAsync(string url, string branch, string locale, string version)
+        public async Task<ActionResult<Document>> GetAsync(string path)
         {
-            var document = await Reader.QueryDocument(url, branch, locale, version);
-            if (document is null)
-                return NotFound();
+            return NotFound();
+        }
 
-            return document;
+        private Tuple<string, string, string, string> ResolvePath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return Tuple.Create<string, string, string, string>($"{Host}index", "live", "en-us", null);
+            }
+
+            return null;
         }
     }
 }
