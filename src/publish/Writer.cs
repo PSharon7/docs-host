@@ -9,7 +9,7 @@ namespace docs.host
 {
     public static class Writer
     {
-        public static Task<(string pageUrl, string pageHash)> UploadPage(Stream pageStream, string pagePath)
+        public static Task<(string pageUrl, string pageHash)> UploadPage(Stream pageStream, string contentType)
         {
             throw new NotImplementedException();
         }
@@ -25,7 +25,7 @@ namespace docs.host
             await ParallelUtility.ParallelForEach(documents, document =>
             {
                 return CosmosDBAccessor<Document>.UpsertAsync(document);
-            }, 1000, 200, progress);
+            }, 2000, 1000, progress);
 
             // switch active etag
             var doc = documents.First();
