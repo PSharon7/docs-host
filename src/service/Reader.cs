@@ -57,6 +57,12 @@ namespace docs.host
                 locales.Add(LocaleFallbackNonEnUsRules[locale]);
             }
 
+            //normalize moniker
+            if (string.IsNullOrWhiteSpace(moniker))
+            {
+                moniker = null;
+            }
+
             // get all potential documents
             var docs = await CosmosDBAccessor<Document>.QueryAsync(
                 doc =>
@@ -70,7 +76,7 @@ namespace docs.host
 
             // get all actives
             HashSet<string> activeEtags = new HashSet<string>(docs.Select(doc => doc.ActiveEtag));
-            var actives = await CosmosDBAccessor<Active>.QueryAsync(active => activeEtags.Contains(active.ActiveEtag) && active.IsActive);
+            var actives = await CosmosDBAccessor<Active>.QueryAsync(active => activeEtags.Contains(active.ActiveEtag));
             activeEtags = new HashSet<string>(actives.Select(active => active.ActiveEtag));
             if (!activeEtags.Any())
             {
@@ -80,13 +86,24 @@ namespace docs.host
             // best match
             Document result = null;
             int bestMatch = -1;
+            string finalMoniker = null;
             foreach (Document doc in docs.Where(d => activeEtags.Contains(d.ActiveEtag)))
             {
                 // branch fallback
                 int score = string.Equals(branch, doc.Branch, StringComparison.OrdinalIgnoreCase) ? 200000 : 100000;
 
                 // moniker fallback
-                score += doc.Monikers.Contains(moniker, StringComparer.OrdinalIgnoreCase) ? 2000 : 1000;
+                string matchedMoniker = null;
+                if (doc.Monikers != null && doc.Monikers.Contains(moniker, StringComparer.OrdinalIgnoreCase))
+                {
+                    score += 2000;
+                    matchedMoniker = moniker;
+                }
+                else
+                {
+                    score += 1000;
+                    matchedMoniker = doc.Monikers?.FirstOrDefault();
+                }
 
                 // locale fallback
                 if (string.Equals(locale, doc.Locale, StringComparison.OrdinalIgnoreCase))
@@ -106,9 +123,11 @@ namespace docs.host
                 {
                     result = doc;
                     bestMatch = score;
+                    finalMoniker = matchedMoniker;
                 }
             }
 
+            result.Monikers = new List<string> { finalMoniker };
             return result;
         }
     }
