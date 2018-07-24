@@ -33,17 +33,21 @@ namespace docs.host
 
                 if (page is null)
                 {
+                    StreamReader sr = new StreamReader(pageStream);
+                    
+
                     page = new Page()
                     {
                         Id = hash,
                         Hash = hash,
-                        Content = pageStream.ToString()
+                        Content = sr.ReadToEnd(),
                     };
 
+                    sr.Close();
                     await CosmosDBAccessor<Page>.UpsertAsync(page);
                 }
 
-                pageUrl = CosmosDBAccessor<Page>.GetDocumentUri(hash).ToString();
+                pageUrl = Config.Get("cosmos_endpoint") + CosmosDBAccessor<Page>.GetDocumentUri(hash).ToString();
             }
 
             pageStream.Close();
