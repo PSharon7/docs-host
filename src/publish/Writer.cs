@@ -9,12 +9,12 @@ namespace docs.host
 {
     public static class Writer
     {
-        public static async Task<(string pageUrl, string pageHash)> UploadPage(Stream pageStream, string contentType)
+        public static async Task<(string pageUrl, string pageHash)> UploadPage(Stream pageStream, bool isDynamicRender, string contentType)
         {
             string pageUrl;
             string hash = HashUtility.GetSha1HashString(pageStream);
             
-            if (contentType == "application/json" || contentType == "text/html" || contentType == "text/plain")
+            if (isDynamicRender)
             {
                 Page page = await CosmosDBAccessor<Page>.GetAsync(hash);
 
@@ -41,6 +41,7 @@ namespace docs.host
 
                 if (!blobExist)
                 {
+                    blob.Properties.ContentType = contentType;
                     await blob.UploadFromStreamAsync(pageStream);
                 }
 
@@ -62,7 +63,7 @@ namespace docs.host
             await ParallelUtility.ParallelForEach(documents, document =>
             {
                 return CosmosDBAccessor<Document>.UpsertAsync(document);
-            }, 2000, 1000, progress);
+            }, 400, 200, progress);
 
             // switch active etag
             var doc = documents.First();

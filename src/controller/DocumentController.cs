@@ -55,7 +55,7 @@ namespace docs.host
             finalPath = (finalPath ?? "/index").ToLowerInvariant();
             finalPath = LocaleHelper.GetPathWithoutLocale(finalPath, out string locale);
             finalPath = finalPath.StartsWith("/") ? finalPath : "/" + finalPath;
-            finalPath = finalPath.EndsWith("/") ? finalPath + "index" : finalPath;W
+            finalPath = finalPath.EndsWith("/") ? finalPath + "index" : finalPath;
             return Tuple.Create(finalPath, locale);
         }
     }
