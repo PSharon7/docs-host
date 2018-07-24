@@ -47,7 +47,6 @@ namespace docs.host
 
             return Ok(doc.IsDynamicRendering ? (object)await Reader.GetPageContent(doc.PageUrl) : doc);
         }
-
         private Tuple<string, string> ResolvePathAndLocale(string path)
         {
             Uri uri = new Uri($"https://{Host}/{path}", UriKind.Absolute);

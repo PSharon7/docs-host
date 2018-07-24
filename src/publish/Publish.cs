@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Document.Hosting;
 using Microsoft.Document.Hosting.RestClient;
+using Microsoft.Document.Hosting.RestService.Contract;
 using Newtonsoft.Json.Linq;
 
 namespace docs.host
@@ -24,12 +25,20 @@ namespace docs.host
             var depots = await s_dhsClient.GetAllDepotsBySiteBasePath("Docs", basePath, null, CancellationToken.None);
             var topDepots = depots.OrderBy(d => d.Priority).Take(top);
             var client = new HttpClient();
-            var activeEtag = DateTime.UtcNow.ToString("o");
+            var activeEtag = Guid.NewGuid().ToString();
 
             await ParallelUtility.ParallelForEach(topDepots, async topDepot =>
             {
-                Console.WriteLine($"Load documents for {topDepot.DepotName}");
-                var documents = await s_dhsClient.GetAllDocuments(topDepot.DepotName, locale, branch, false, null, CancellationToken.None);
+                var continueAt = string.Empty;
+                var documents = new List<GetDocumentResponse>();
+                var i = 1;
+                do
+                {
+                    Console.WriteLine($"Load {1000 * i++} documents for {topDepot.DepotName}");
+                    var documentsResponse = await s_dhsClient.GetDocumentsPaginated(topDepot.DepotName, locale, branch, false, continueAt, null, 1000, CancellationToken.None);
+                    documents.AddRange(documentsResponse.Documents);
+                    continueAt = documentsResponse.ContinueAt;
+                } while (!string.IsNullOrEmpty(continueAt));
 
                 Console.WriteLine($"Convert {documents.Count} documents for {topDepot.DepotName}");
                 var pageDocs = new ConcurrentBag<Document>();
@@ -38,7 +47,7 @@ namespace docs.host
                     using (var request = new HttpRequestMessage(HttpMethod.Get, document.ContentUri))
                     using (Stream contentStream = await (await client.SendAsync(request)).Content.ReadAsStreamAsync())
                     {
-                        var (pageUrl, pageHash) = await Writer.UploadPage(contentStream, document.CombinedMetadata.GetValueOrDefault<string>("content_type"));
+                        var (pageUrl, pageHash) = await Writer.UploadPage(contentStream, document.CombinedMetadata.GetValueOrDefault<bool>("is_dynamic_rendering"), document.CombinedMetadata.GetValueOrDefault<string>("content_type"));
                         var pageDoc = new Document
                         {
                             Docset = topDepot.DepotName,
@@ -58,8 +67,8 @@ namespace docs.host
                         pageDocs.Add(pageDoc);
                     }
                 },
-                2000,
-                1000,
+                400,
+                200,
                 (done, total) =>
                 {
                     var percent = ((int)(100 * Math.Min(1.0, done / Math.Max(1.0, total)))).ToString();
